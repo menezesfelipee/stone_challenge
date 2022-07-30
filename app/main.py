@@ -1,5 +1,7 @@
 from typing import Any, Dict, List
 
+from marshmallow import ValidationError
+
 from app.schema import ArgsSchema
 
 
@@ -30,10 +32,14 @@ def divide_account(
                         }
     """
 
-    schema_result = ArgsSchema().load({
-        "shopping_list": shopping_list,
-        "emails": emails
-    })
+    try:
+        schema_result = ArgsSchema().load({
+            "shopping_list": shopping_list,
+            "emails": emails
+        })
+    except ValidationError as err:
+        return {"error": err.messages}
+
     shopping_list = schema_result["shopping_list"]
     emails = schema_result["emails"]
 

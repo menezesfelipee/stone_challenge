@@ -64,5 +64,5 @@ while True:
     i += 1
     print()
 
-print("Divisão:")
+print("\nResultado:")
 print(json.dumps(divide_account(shopping_list, emails), indent=4))
