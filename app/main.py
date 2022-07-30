@@ -1,6 +1,6 @@
 from typing import Any, Dict, List
 
-from app.schema import EmailListSchema, ShoppingListSchema
+from app.schema import ArgsSchema
 
 
 def divide_account(
@@ -30,8 +30,12 @@ def divide_account(
                         }
     """
 
-    shopping_list = ShoppingListSchema().load({"items": shopping_list})["items"]
-    emails = EmailListSchema().load({"items": emails})["items"]
+    schema_result = ArgsSchema().load({
+        "shopping_list": shopping_list,
+        "emails": emails
+    })
+    shopping_list = schema_result["shopping_list"]
+    emails = schema_result["emails"]
 
     total_price = sum(item["price"] * item["quantity"] for item in shopping_list)
 
