@@ -164,7 +164,7 @@ CREATE VIEW invoice_amount_per_month_in_current_year AS (
         FROM movement
         WHERE
             type = 5
-            AND extract('year' FROM execution_date) = extract('year' FROM CURRENT_DATE)
+            AND EXTRACT(year FROM execution_date) = EXTRACT(year FROM CURRENT_DATE)
         GROUP BY execution_month
     )
     SELECT
@@ -175,107 +175,78 @@ CREATE VIEW invoice_amount_per_month_in_current_year AS (
 );
 
 -- Index criado para otimizar a query acima
-CREATE INDEX idx_type_date ON movement (type, extract('year' FROM execution_date));
+CREATE INDEX idx_type_date ON movement (type, EXTRACT(year FROM execution_date));
 
--- Função para gerar um dia aleatório no ano atual
-CREATE FUNCTION random_day_in_current_year() RETURNS TIMESTAMP AS $$
-DECLARE random_timestamp TIMESTAMP;
+---------------------------------------------------------------------------------------------------------------
+
+-- Inserindo alguns dados para exemplificação. Caso não queira, pode comentar tudo daqui até o final --
+
+-- Função para gerar um dia aleatório nos últimos 10 anos
+CREATE FUNCTION random_day_in_last_10_years() RETURNS TIMESTAMP AS $$
+DECLARE
+    current_epoch INTEGER;
+    ten_years_ago_epoch INTEGER;
+    random_timestamp TIMESTAMP;
 BEGIN
+    current_epoch := EXTRACT(epoch FROM CURRENT_TIMESTAMP);
+    ten_years_ago_epoch := EXTRACT(epoch FROM CURRENT_TIMESTAMP - Interval '10 years');
     random_timestamp := (
-        SELECT *
-        FROM
-            generate_series(
-                date_trunc('year', CURRENT_TIMESTAMP),
-                date_trunc('year', CURRENT_TIMESTAMP + Interval '1 year') - Interval '1 day',
-                '1 day'
-            ) q
-        ORDER BY random()
-        LIMIT 1
+        to_timestamp(
+            floor(
+                random() * (current_epoch - ten_years_ago_epoch + 1) + ten_years_ago_epoch
+            )
+        )
     );
     RETURN random_timestamp;
 END;
 $$ language 'plpgsql';
 
--- Inserindo alguns dados para exemplificação
-INSERT INTO customer (id, name, email)
+-- Inserindo 3 cliente manualmente
+INSERT INTO customer (name, email)
 VALUES
-    ('7ed35149-ba7e-4a7c-ae9f-95f94c0504d4', 'Alfredo', 'alfredo@alfredo.com'),
-    ('fcc13a5c-0185-4740-b4dd-99b81ecf9a81', 'Bernardo', 'bernardo@bernardo.com'),
-    ('2c292f73-a2af-4848-9933-ac55f2f493d5', 'Caio', 'caio@caio.com');
+    ('Alfredo', 'alfredo@alfredo.com'),
+    ('Bernardo', 'bernardo@bernardo.com'),
+    ('Caio', 'caio@caio.com');
 
-INSERT INTO account (internal_id, agency_id, customer_id, is_active, activation_date)
-VALUES
-    ('8782bbeb-7119-4b48-bd1a-39051c57b695', 1, 'fcc13a5c-0185-4740-b4dd-99b81ecf9a81', true, CURRENT_TIMESTAMP),
-    ('8f5790be-1809-4e16-98cd-37ffc6a7f890', 1, '7ed35149-ba7e-4a7c-ae9f-95f94c0504d4', true, CURRENT_TIMESTAMP),
-    ('8dd89be2-e372-451c-8b0e-9a6a50c7f06c', 1, '2c292f73-a2af-4848-9933-ac55f2f493d5', true, CURRENT_TIMESTAMP),
-    ('94e088a4-fd1e-41c9-a4dc-96e57204aff5', 1, 'fcc13a5c-0185-4740-b4dd-99b81ecf9a81', true, CURRENT_TIMESTAMP),
-    ('147ff387-8972-43c3-b8f0-d3f64b2fa51f', 1, 'fcc13a5c-0185-4740-b4dd-99b81ecf9a81', true, CURRENT_TIMESTAMP),
-    ('922e50d9-7063-4bfa-9895-b0b3a82590e5', 1, '7ed35149-ba7e-4a7c-ae9f-95f94c0504d4', true, CURRENT_TIMESTAMP);
+-- Inserindo aleatoriamente 6 contas para os clientes criados anteriormente
+-- Essas contas iniciam com saldo alto para não ter problema na validação do saldo na inserção de movimentações
+INSERT INTO account (agency_id, customer_id, is_active, balance, activation_date)
+SELECT 1, "B".id, true, 100000000, CURRENT_TIMESTAMP
+FROM (
+    SELECT floor(random()*3+1) relate_column
+    FROM generate_series(1, 6, 1)
+) "A"
+JOIN (
+    SELECT ROW_NUMBER() OVER() relate_column, id
+    FROM customer
+) "B" ON "A".relate_column = "B".relate_column;
 
-INSERT INTO movement (type, amount, internal_account_id, execution_date)
-VALUES (1, 500000, '8782bbeb-7119-4b48-bd1a-39051c57b695', random_day_in_current_year());
-
-INSERT INTO movement (type, amount, internal_account_id, execution_date)
-VALUES (1, 786547, '8f5790be-1809-4e16-98cd-37ffc6a7f890', random_day_in_current_year());
-
-INSERT INTO movement (type, amount, internal_account_id, execution_date)
-VALUES (1, 100005, '8dd89be2-e372-451c-8b0e-9a6a50c7f06c', random_day_in_current_year());
-
-INSERT INTO movement (type, amount, internal_account_id, execution_date)
-VALUES (1, 789051, '94e088a4-fd1e-41c9-a4dc-96e57204aff5', random_day_in_current_year());
-
-INSERT INTO movement (type, amount, internal_account_id, execution_date)
-VALUES (1, 200000, '147ff387-8972-43c3-b8f0-d3f64b2fa51f', random_day_in_current_year());
-
-INSERT INTO movement (type, amount, internal_account_id, execution_date)
-VALUES (1, 2675411, '922e50d9-7063-4bfa-9895-b0b3a82590e5', random_day_in_current_year());
-
-INSERT INTO movement (type, amount, internal_account_id, out_data, execution_date)
-VALUES (5, 5000, '8782bbeb-7119-4b48-bd1a-39051c57b695', '{"invoice_code": 12345}', random_day_in_current_year());
-
-INSERT INTO movement (type, amount, internal_account_id, execution_date)
-VALUES (2, 200, '8f5790be-1809-4e16-98cd-37ffc6a7f890', random_day_in_current_year());
-
-INSERT INTO movement (type, amount, internal_account_id, out_data, execution_date)
-VALUES (4, 3000, '147ff387-8972-43c3-b8f0-d3f64b2fa51f', '{"agency_id": 1234, "account_id": 97654378, "document": 11972570987}', random_day_in_current_year());
-
-INSERT INTO movement (type, amount, internal_account_id, out_data, execution_date)
-VALUES (5, 9876, '8dd89be2-e372-451c-8b0e-9a6a50c7f06c', '{"invoice_code": 12345}', random_day_in_current_year());
-
-INSERT INTO movement (type, amount, internal_account_id, out_data, execution_date)
-VALUES (5, 6754, '147ff387-8972-43c3-b8f0-d3f64b2fa51f', '{"invoice_code": 12345}', random_day_in_current_year());
-
-INSERT INTO movement (type, amount, internal_account_id, out_data, execution_date)
-VALUES (5, 1000, '8782bbeb-7119-4b48-bd1a-39051c57b695', '{"invoice_code": 12345}', random_day_in_current_year());
-
-INSERT INTO movement (type, amount, internal_account_id, out_data, execution_date)
-VALUES (5, 1000, '8f5790be-1809-4e16-98cd-37ffc6a7f890', '{"invoice_code": 12345}', random_day_in_current_year());
-
-INSERT INTO movement (type, amount, internal_account_id, out_data, execution_date)
-VALUES (5, 1000, '922e50d9-7063-4bfa-9895-b0b3a82590e5', '{"invoice_code": 12345}', random_day_in_current_year());
-
-INSERT INTO movement (type, amount, internal_account_id, out_data, execution_date)
-VALUES (5, 365, '8782bbeb-7119-4b48-bd1a-39051c57b695', '{"invoice_code": 12345}', random_day_in_current_year());
-
-INSERT INTO movement (type, amount, internal_account_id, out_data, execution_date)
-VALUES (5, 2856, '8f5790be-1809-4e16-98cd-37ffc6a7f890', '{"invoice_code": 12345}', random_day_in_current_year());
-
-INSERT INTO movement (type, amount, internal_account_id, out_data, execution_date)
-VALUES (5, 33258, '94e088a4-fd1e-41c9-a4dc-96e57204aff5', '{"invoice_code": 12345}', random_day_in_current_year());
-
-INSERT INTO movement (type, amount, internal_account_id, out_data, execution_date)
-VALUES (5, 36205, '8782bbeb-7119-4b48-bd1a-39051c57b695', '{"invoice_code": 12345}', random_day_in_current_year());
-
-INSERT INTO movement (type, amount, internal_account_id, out_data, execution_date)
-VALUES (5, 1111, '8f5790be-1809-4e16-98cd-37ffc6a7f890', '{"invoice_code": 12345}', random_day_in_current_year());
-
-INSERT INTO movement (type, amount, internal_account_id, out_data, execution_date)
-VALUES (5, 98754, '8782bbeb-7119-4b48-bd1a-39051c57b695', '{"invoice_code": 12345}', random_day_in_current_year());
-
-INSERT INTO movement (type, amount, internal_account_id, out_data, execution_date)
-VALUES (5, 10000, '922e50d9-7063-4bfa-9895-b0b3a82590e5', '{"invoice_code": 12345}', random_day_in_current_year());
-
-INSERT INTO movement (type, amount, internal_account_id, out_data, execution_date)
-VALUES (5, 9000, '8782bbeb-7119-4b48-bd1a-39051c57b695', '{"invoice_code": 12345}', random_day_in_current_year());
+-- Gerando 10000 movimentações aleatórias para as contas criadas nos últimos 10 anos
+WITH aleatory_movements_types AS (
+    SELECT
+        floor(random()*5+1) _type,
+        floor(random()*6+1) temp_account_id
+    FROM generate_series(1, 10000, 1)
+), types AS (
+    SELECT
+        type,
+        CASE
+            WHEN type = 4 THEN '{"agency_id": 1, "account_id": 1, "document": 19865727509}'::JSONB
+            WHEN type = 5 THEN '{"invoice_code": 12345}'::JSONB
+            ELSE NULL
+        END out_data
+    FROM
+        generate_series(1, 5, 1) type
+), accounts AS (
+    SELECT
+        ROW_NUMBER() OVER() temp_account_id,
+        internal_id
+    FROM account
+)
+INSERT INTO movement (type, internal_account_id, amount, out_data, execution_date)
+SELECT "A"._type, "B".internal_id, floor(random()*10000+1) amount, out_data, random_day_in_last_10_years()
+FROM aleatory_movements_types "A"
+JOIN accounts "B" ON "B".temp_account_id = "A".temp_account_id
+JOIN types "C" ON "C".type = "A"._type;
 
 COMMIT;
