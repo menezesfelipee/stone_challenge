@@ -30,13 +30,13 @@ SELECT * FROM invoice_amount_per_month_in_current_year;
 # PYTHON CHALLENGE
 
 ## Requisitos
-- Python 3.7+
-- python-venv (ou que você preferir)
+- Python 3.9+
+- python-venv (ou o que você preferir)
 
 ## Como instalar
 1. Crie um ambiente virtual:
 ```bash
-python3.7 -m venv venv
+python3.9 -m venv venv
 ```
 
 2. Ative-o:
@@ -61,5 +61,5 @@ Para facilitar o uso, foi desenvolvida uma simples interface via linha de comand
 Para rodar todos os testes unitários basta rodar o seguinte comando:
 
 ```bash
-./python -m unittest -v
+python -m unittest -v
 ```

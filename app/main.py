@@ -48,9 +48,7 @@ def divide_account(
     price_per_person = total_price // len(emails)
     remaining = total_price - (price_per_person * len(emails))
 
-    dict_result = {email: price_per_person for email in emails}
-
-    for idx in range(remaining):
-        dict_result[emails[idx]] += 1
-
-    return dict_result
+    return (
+        dict.fromkeys(emails[:remaining], price_per_person + 1)
+        | dict.fromkeys(emails[remaining:], price_per_person)
+    )
