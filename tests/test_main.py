@@ -30,8 +30,8 @@ class TestDivideAccountScenarios(unittest.TestCase):
 
         result = divide_account(self.shopping_list, self.emails)
 
-        self.assertEqual(result["felipe@felipe.com"], 27)
-        self.assertEqual(result["nivia@nivia.com"], 25)
+        self.assertEqual(result["felipe@felipe.com"], 26)
+        self.assertEqual(result["nivia@nivia.com"], 26)
         self.assertEqual(result["joao@joao.com"], 25)
         self.assertEqual(result["maria@maria.com"], 25)
 
@@ -41,11 +41,11 @@ class TestDivideAccountScenarios(unittest.TestCase):
 
         result = divide_account(self.shopping_list, self.emails)
 
-        self.assertEqual(result["felipe@felipe.com"], 22)
-        self.assertEqual(result["nivia@nivia.com"], 17)
-        self.assertEqual(result["joao@joao.com"], 17)
-        self.assertEqual(result["maria@maria.com"], 17)
-        self.assertEqual(result["a@a.com"], 17)
+        self.assertEqual(result["felipe@felipe.com"], 18)
+        self.assertEqual(result["nivia@nivia.com"], 18)
+        self.assertEqual(result["joao@joao.com"], 18)
+        self.assertEqual(result["maria@maria.com"], 18)
+        self.assertEqual(result["a@a.com"], 18)
         self.assertEqual(result["b@b.com"], 17)
 
     def test_divide_1_per_3_emails(self):
