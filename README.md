@@ -55,7 +55,7 @@ Para facilitar o uso, foi desenvolvida uma simples interface via linha de comand
 ./run.py
 ```
 
-> Caso os dados informados não estejam como o esperado, será mostrado um dicionário com os respectivos erros.
+> Caso os dados informados não estejam como o esperado, será retornado um dicionário com os respectivos erros.
 
 ## Rodando os testes unitários
 Para rodar todos os testes unitários basta rodar o seguinte comando:

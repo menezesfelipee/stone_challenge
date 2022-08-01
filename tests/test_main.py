@@ -10,6 +10,12 @@ class TestDivideAccountScenarios(unittest.TestCase):
     ]
     emails = ["felipe@felipe.com", "nivia@nivia.com", "joao@joao.com"]
 
+    def test_invalid_data_must_return_error(self):
+        result = divide_account([], [])
+        # Tests with other invalid data are in test_schema
+
+        self.assertIn("error", result)
+        self.assertIsInstance(result["error"], dict)
 
     def test_divide_100_per_3_emails(self):
         result = divide_account(self.shopping_list, self.emails)
