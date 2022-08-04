@@ -1,21 +1,22 @@
 import unittest
 
+from marshmallow import ValidationError
+
 from app.main import divide_account
 
 class TestDivideAccountScenarios(unittest.TestCase):
-    shopping_list = [
-        {"name": "test1", "price": 20, "quantity": 3},
-        {"name": "test2", "price": 5, "quantity": 5},
-        {"name": "test3", "price": 15, "quantity": 1},
-    ]
-    emails = ["felipe@felipe.com", "nivia@nivia.com", "joao@joao.com"]
+    def setUp(self):
+        self.shopping_list = [
+            {"name": "test1", "price": 20, "quantity": 3},
+            {"name": "test2", "price": 5, "quantity": 5},
+            {"name": "test3", "price": 15, "quantity": 1},
+        ]
+        self.emails = ["felipe@felipe.com", "nivia@nivia.com", "joao@joao.com"]
 
-    def test_invalid_data_must_return_error(self):
-        result = divide_account([], [])
-        # Tests with other invalid data are in test_schema
-
-        self.assertIn("error", result)
-        self.assertIsInstance(result["error"], dict)
+    def test_invalid_data_must_raise(self):
+        with self.assertRaises(ValidationError):
+            # Tests with other invalid data are in test_schema
+            divide_account([], [])
 
     def test_divide_100_per_3_emails(self):
         result = divide_account(self.shopping_list, self.emails)
@@ -37,7 +38,7 @@ class TestDivideAccountScenarios(unittest.TestCase):
 
     def test_divide_107_per_6_emails(self):
         self.shopping_list[2]["price"] = 22
-        self.emails.extend(["a@a.com", "b@b.com"])
+        self.emails.extend(["maria@maria.com", "a@a.com", "b@b.com"])
 
         result = divide_account(self.shopping_list, self.emails)
 
@@ -51,7 +52,6 @@ class TestDivideAccountScenarios(unittest.TestCase):
     def test_divide_1_per_3_emails(self):
         self.shopping_list = self.shopping_list[2:]
         self.shopping_list[0]["price"] = 1
-        self.emails = self.emails[:4]
 
         result = divide_account(self.shopping_list, self.emails)
 
