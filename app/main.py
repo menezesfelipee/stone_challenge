@@ -1,3 +1,4 @@
+from operator import or_ as merge_dict
 from typing import Dict, List, TypedDict
 
 from app.schema import ArgsSchema
@@ -49,7 +50,7 @@ def divide_account(
     price_per_person = total_price // len(emails)
     remaining = total_price % len(emails)
 
-    return (
-        dict.fromkeys(emails[:remaining], price_per_person + 1)
-        | dict.fromkeys(emails[remaining:], price_per_person)
+    return merge_dict(
+        dict.fromkeys(emails[:remaining], price_per_person + 1),
+        dict.fromkeys(emails[remaining:], price_per_person)
     )
