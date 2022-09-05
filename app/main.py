@@ -47,10 +47,9 @@ def divide_account(
 
     total_price = sum(item["price"] * item["quantity"] for item in shopping_list)
 
-    price_per_person = total_price // len(emails)
-    remaining = total_price % len(emails)
+    price_per_person, remainder = divmod(total_price, len(emails))
 
     return merge_dict(
-        dict.fromkeys(emails[:remaining], price_per_person + 1),
-        dict.fromkeys(emails[remaining:], price_per_person)
+        dict.fromkeys(emails[:remainder], price_per_person + 1),
+        dict.fromkeys(emails[remainder:], price_per_person)
     )
